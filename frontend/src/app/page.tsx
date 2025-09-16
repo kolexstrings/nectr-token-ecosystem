@@ -1,7 +1,57 @@
+"use client";
+
+import { ethers } from "ethers";
+import { useState, useEffect } from "react";
+import NectrToken from "@/artifacts/contracts/NectrToken.sol/NECTRToken.json";
+
+const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
 export default function Home() {
+  const [account, setAccount] = useState<string | null>(null);
+  const [nectrBalance, setNectrBalance] = useState<string>("0");
+
+  const connectWallet = async () => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        setAccount(accounts[0]);
+      } catch (err) {
+        console.error("Wallet connection failed:", err);
+      }
+    } else {
+      alert("MetaMask is not installed. Please install it to use this dApp.");
+    }
+  };
+
+  const fetchBalance = async (userAddress: string) => {
+    try {
+      const provider = new ethers.BrowserProvider(
+        typeof window !== "undefined" ? window.ethereum : null
+      );
+      const contract = new ethers.Contract(
+        NECTR_TOKEN_ADDRESS,
+        NectrToken.abi,
+        provider
+      );
+      const rawBalance = await contract.balanceOf(userAddress);
+      const decimals = await contract.decimals();
+      const formatted = ethers.formatUnits(rawBalance, decimals);
+      setNectrBalance(formatted);
+    } catch (err) {
+      console.error("Failed to fetch balance:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (account) {
+      fetchBalance(account);
+    }
+  }, [account]);
+
   return (
     <div className="min-h-screen bg-dark-900 cyber-grid text-white p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Title */}
         <h1 className="text-5xl font-cyber font-bold text-cyber-400 text-glow mb-8 text-center">
           NECTR Web3 Ecosystem
         </h1>
@@ -11,16 +61,49 @@ export default function Home() {
           <p className="text-xl text-cyber-300 mb-6">
             Experience the future of decentralized staking
           </p>
-          <div className="flex justify-center gap-4">
-            <button className="btn-cyber animate-cyber-pulse">
+          <div className="flex flex-wrap justify-center gap-4">
+            {/* Connect Wallet - Primary (Green) */}
+            {!account ? (
+              <button
+                className="btn-cyber bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg animate-cyber-pulse"
+                onClick={connectWallet}
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <button className="btn-cyber bg-green-600 px-6 py-2 rounded-lg cursor-default">
+                Connected
+              </button>
+            )}
+
+            {/* Start Staking - Secondary (Purple) */}
+            <button
+              className={`px-6 py-2 rounded-lg ${
+                account
+                  ? "btn-neon bg-purple-600 hover:bg-purple-700 text-white"
+                  : "bg-purple-600 text-white opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!account}
+            >
               Start Staking
             </button>
-            <button className="btn-neon">Learn More</button>
           </div>
+
+          {/* Wallet Address Display */}
+          {account ? (
+            <p className="text-sm text-green-400 mt-4 font-mono">
+              Wallet: {account.slice(0, 6)}...{account.slice(-4)}
+            </p>
+          ) : (
+            <p className="text-sm text-cyber-300 mt-4">
+              Connect your wallet to enable staking
+            </p>
+          )}
         </div>
 
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Cyber Staking */}
           <div className="card-cyber hover:scale-105 transition-transform duration-300">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-cyber-500 rounded-full flex items-center justify-center mr-4">
@@ -37,6 +120,7 @@ export default function Home() {
             <div className="text-cyber-400 font-mono text-sm">APY: 12.5%</div>
           </div>
 
+          {/* Neon Rewards */}
           <div className="card-neon hover:scale-105 transition-transform duration-300">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-neon-500 rounded-full flex items-center justify-center mr-4">
@@ -55,6 +139,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Electric Speed */}
           <div className="card-electric hover:scale-105 transition-transform duration-300">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-electric-500 rounded-full flex items-center justify-center mr-4">
@@ -104,20 +189,6 @@ export default function Home() {
               </div>
               <div className="text-cyber-300">Uptime</div>
             </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="text-center">
-          <h2 className="text-3xl font-cyber mb-6">Ready to Start?</h2>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className="btn-cyber text-lg px-8 py-4">
-              Connect Wallet
-            </button>
-            <button className="btn-neon text-lg px-8 py-4">View Docs</button>
-            <button className="btn-electric text-lg px-8 py-4">
-              Join Community
-            </button>
           </div>
         </div>
       </div>
