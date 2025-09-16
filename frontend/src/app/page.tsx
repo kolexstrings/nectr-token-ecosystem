@@ -64,6 +64,15 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (document.getElementById("x-wjs")) return;
+    const s = document.createElement("script");
+    s.id = "x-wjs";
+    s.async = true;
+    s.src = "https://platform.twitter.com/widgets.js";
+    document.body.appendChild(s);
+  }, []);
+
   const connectWallet = async () => {
     if (typeof window === "undefined" || !window.ethereum) {
       toast.error(
@@ -590,6 +599,58 @@ export default function Home() {
               </div>
             </Modal>
           )}
+        </div>
+
+        {/* Community & Updates */}
+        <div className="glass rounded-glass p-6 mb-12">
+          <h2 className="text-3xl font-cyber text-center mb-6">
+            Community & Updates
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-dark-800 rounded-lg p-4">
+              <a
+                className="twitter-timeline"
+                data-theme="dark"
+                data-chrome="noheader nofooter noborders transparent"
+                data-height="520"
+                href="https://twitter.com/yourhandle"
+              >
+                Tweets by @yourhandle
+              </a>
+            </div>
+
+            <div className="bg-dark-800 rounded-lg p-6 flex flex-col items-center justify-center gap-4">
+              <p className="text-cyber-300 text-center">
+                Join our community and get the latest updates
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="https://t.me/yourTelegram"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-neon px-6 py-2 rounded-lg"
+                >
+                  Telegram
+                </a>
+                <a
+                  href="https://discord.gg/yourInvite"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-electric px-6 py-2 rounded-lg"
+                >
+                  Discord
+                </a>
+                <a
+                  href="https://twitter.com/yourhandle"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-cyber px-6 py-2 rounded-lg"
+                >
+                  Follow on X
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
