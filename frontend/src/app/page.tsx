@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import { Copy, Wallet } from "lucide-react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import { toast } from "react-toastify";
 import NectrToken from "../../NECTRToken.json";
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
 const AMOY_RPC_URL = process.env.NEXT_PUBLIC_AMOY_RPC_URL!;
@@ -70,10 +71,19 @@ export default function Home() {
         setAccount(accounts[0]);
       } catch (err) {
         console.error("Wallet connection failed:", err);
+        toast.error("Wallet connection failed. Please try again.");
       }
     } else {
-      alert("MetaMask is not installed. Please install it to use this dApp.");
+      toast.error(
+        "MetaMask is not installed. Please install it to use this dApp."
+      );
     }
+  };
+
+  const disconnectWallet = () => {
+    // Just reset the state — MetaMask doesn’t have a native “disconnect” method
+    setAccount(null);
+    setNectrBalance("0");
   };
 
   const fetchBalance = async (userAddress: string) => {
@@ -108,6 +118,7 @@ export default function Home() {
       setNectrBalance(displayBalance);
     } catch (err) {
       console.error("Failed to fetch balance:", err);
+      toast.error("Failed to fetch NECTR balance.");
     }
   };
 
@@ -131,7 +142,6 @@ export default function Home() {
             Experience the future of decentralized staking
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            {/* Connect Wallet - Primary (Green) */}
             {!account ? (
               <button
                 className="btn-cyber bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg animate-cyber-pulse"
@@ -140,8 +150,11 @@ export default function Home() {
                 Connect Wallet
               </button>
             ) : (
-              <button className="btn-cyber bg-green-600 px-6 py-2 rounded-lg cursor-default">
-                Connected
+              <button
+                className="btn-cyber bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg"
+                onClick={disconnectWallet}
+              >
+                Disconnect
               </button>
             )}
 
@@ -161,11 +174,16 @@ export default function Home() {
           {/* Wallet + Balance */}
           {account ? (
             <div className="mt-4">
-              <p className="text-sm text-green-400 font-mono">
+              <p className="text-sm text-green-400 font-mono flex items-center justify-center">
                 <Wallet className="inline-block mr-2" />
                 {account.slice(0, 6)}...{account.slice(-4)}
-                <CopyToClipboard text={account}>
-                  <Copy className="inline-block ml-2 cursor-pointer" />
+                <CopyToClipboard
+                  text={account}
+                  onCopy={() =>
+                    toast.success("Wallet address copied to clipboard!")
+                  }
+                >
+                  <Copy className="inline-block ml-2 cursor-pointer hover:text-cyber-400" />
                 </CopyToClipboard>
               </p>
               <p className="text-sm text-cyber-300 font-mono mt-2">
