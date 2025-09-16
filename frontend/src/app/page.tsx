@@ -24,6 +24,9 @@ export default function Home() {
   const [stakeAmount, setStakeAmount] = useState("");
   const [isApproving, setIsApproving] = useState(false);
   const [allowance, setAllowance] = useState<bigint>(0n);
+  const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
+  const [unstakeAmount, setUnstakeAmount] = useState("");
+  const [isUnstaking, setIsUnstaking] = useState(false);
 
   useEffect(() => {
     if (!account) return;
@@ -255,6 +258,43 @@ export default function Home() {
     }
   };
 
+  const unstake = async (amount: string) => {
+    if (!account) return toast.error("Wallet not connected");
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      if (!NECTR_STAKING_ADDRESS)
+        throw new Error("Staking contract address is undefined");
+      const tokenContract = new ethers.Contract(
+        NECTR_TOKEN_ADDRESS,
+        NectrToken.abi,
+        signer
+      );
+      const decimals = await tokenContract.decimals();
+      const formattedAmount = ethers.parseUnits(amount, decimals);
+
+      const stakingContract = new ethers.Contract(
+        NECTR_STAKING_ADDRESS,
+        NectrStaking.abi,
+        signer
+      );
+      const tx = await stakingContract.unstake(formattedAmount);
+      toast.info("Unstake sent, waiting for confirmation...");
+      await tx.wait();
+      toast.success("Successfully unstaked NECTR!");
+
+      if (account) {
+        fetchBalance(account);
+        const newStaked = await stakingContract.stakes(account);
+        setStakedAmount(ethers.formatUnits(newStaked, decimals));
+      }
+    } catch (err: any) {
+      console.error("Unstaking failed:", err);
+      toast.error(err?.message || "Unstaking failed");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-900 cyber-grid text-white p-8">
       <div className="max-w-6xl mx-auto">
@@ -296,6 +336,17 @@ export default function Home() {
               disabled={!account}
             >
               Stake NECTR
+            </button>
+            <button
+              onClick={() => setIsUnstakeModalOpen(true)}
+              className={`px-6 py-2 rounded-lg ${
+                account
+                  ? "btn-electric"
+                  : "bg-electric-500 text-white opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!account}
+            >
+              Unstake
             </button>
           </div>
 
@@ -471,6 +522,69 @@ export default function Home() {
                       : isStaking
                       ? "Staking..."
                       : "Stake"}
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+          {isUnstakeModalOpen && (
+            <Modal
+              onClose={() => setIsUnstakeModalOpen(false)}
+              containerClassName="items-center"
+              contentClassName="max-w-2xl -mt-36"
+            >
+              <div className="space-y-4 text-white">
+                <h3 className="text-2xl font-cyber text-cyber-400 text-center">
+                  Unstake NECTR
+                </h3>
+                <div className="glass rounded-glass p-4 bg-dark-800">
+                  <label className="block text-xs font-mono text-cyber-300 mb-1">
+                    Amount to Unstake
+                  </label>
+                  <input
+                    type="number"
+                    value={unstakeAmount}
+                    onChange={(e) => setUnstakeAmount(e.target.value)}
+                    placeholder="0.0"
+                    step="0.000001"
+                    className="w-full px-3 py-2 rounded-md bg-dark-900 text-white placeholder-cyber-600 border border-cyber-700 focus:outline-none focus:ring-2 focus:ring-cyber-500"
+                  />
+                  <p className="text-xs text-cyber-500 mt-2">
+                    Staked: {stakedAmount} NECTR
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsUnstakeModalOpen(false)}
+                    className="flex-1 px-4 py-2 rounded-lg bg-dark-700 text-cyber-300 hover:bg-dark-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!unstakeAmount) return;
+                      if (
+                        parseFloat(unstakeAmount) > parseFloat(stakedAmount)
+                      ) {
+                        return toast.error("Amount exceeds staked balance");
+                      }
+                      setIsUnstaking(true);
+                      try {
+                        await unstake(unstakeAmount);
+                        setUnstakeAmount("");
+                        setIsUnstakeModalOpen(false);
+                      } finally {
+                        setIsUnstaking(false);
+                      }
+                    }}
+                    disabled={isUnstaking || !unstakeAmount}
+                    className={`flex-1 px-4 py-2 rounded-lg ${
+                      isUnstaking || !unstakeAmount
+                        ? "opacity-50 cursor-not-allowed bg-dark-700 text-cyber-300"
+                        : "btn-electric"
+                    }`}
+                  >
+                    {isUnstaking ? "Unstaking..." : "Unstake"}
                   </button>
                 </div>
               </div>
