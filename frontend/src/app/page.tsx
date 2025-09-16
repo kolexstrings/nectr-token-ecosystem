@@ -2,6 +2,8 @@
 
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
+import { Copy, Wallet } from "lucide-react";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 import NectrToken from "../../NECTRToken.json";
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
 const AMOY_RPC_URL = process.env.NEXT_PUBLIC_AMOY_RPC_URL!;
@@ -160,7 +162,11 @@ export default function Home() {
           {account ? (
             <div className="mt-4">
               <p className="text-sm text-green-400 font-mono">
-                Wallet: {account.slice(0, 6)}...{account.slice(-4)}
+                <Wallet className="inline-block mr-2" />
+                {account.slice(0, 6)}...{account.slice(-4)}
+                <CopyToClipboard text={account}>
+                  <Copy className="inline-block ml-2 cursor-pointer" />
+                </CopyToClipboard>
               </p>
               <p className="text-sm text-cyber-300 font-mono mt-2">
                 Balance: {nectrBalance} NECTR
