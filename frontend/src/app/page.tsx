@@ -2,12 +2,63 @@
 
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
-import NectrToken from "@/artifacts/contracts/NectrToken.sol/NECTRToken.json";
-
+import NectrToken from "../../NECTRToken.json";
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
+const AMOY_RPC_URL = process.env.NEXT_PUBLIC_AMOY_RPC_URL!;
+
 export default function Home() {
   const [account, setAccount] = useState<string | null>(null);
   const [nectrBalance, setNectrBalance] = useState<string>("0");
+
+  useEffect(() => {
+    if (!account) return;
+
+    const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL);
+    const contract = new ethers.Contract(
+      NECTR_TOKEN_ADDRESS,
+      NectrToken.abi,
+      provider
+    );
+
+    // Fetch balance initially
+    fetchBalance(account);
+
+    // Event listener
+    const onTransfer = (from: string, to: string) => {
+      if (
+        from.toLowerCase() === account.toLowerCase() ||
+        to.toLowerCase() === account.toLowerCase()
+      ) {
+        fetchBalance(account);
+      }
+    };
+
+    contract.on("Transfer", onTransfer);
+
+    // Cleanup when component unmounts
+    return () => {
+      contract.off("Transfer", onTransfer);
+    };
+  }, [account]);
+
+  useEffect(() => {
+    if (!window.ethereum) return;
+
+    const handler = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+        fetchBalance(accounts[0]);
+      } else {
+        setAccount(null);
+        setNectrBalance("0");
+      }
+    };
+
+    window.ethereum.on("accountsChanged", handler);
+    return () => {
+      window.ethereum.removeListener("accountsChanged", handler);
+    };
+  }, []);
 
   const connectWallet = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
@@ -25,18 +76,34 @@ export default function Home() {
 
   const fetchBalance = async (userAddress: string) => {
     try {
-      const provider = new ethers.BrowserProvider(
-        typeof window !== "undefined" ? window.ethereum : null
-      );
+      const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL);
       const contract = new ethers.Contract(
         NECTR_TOKEN_ADDRESS,
         NectrToken.abi,
         provider
       );
+
       const rawBalance = await contract.balanceOf(userAddress);
       const decimals = await contract.decimals();
       const formatted = ethers.formatUnits(rawBalance, decimals);
-      setNectrBalance(formatted);
+
+      // Convert to number and apply formatting rules
+      let displayBalance: string;
+      const num = parseFloat(formatted);
+
+      if (num >= 1) {
+        displayBalance = num.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+      } else {
+        displayBalance = num.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 6,
+        });
+      }
+
+      setNectrBalance(displayBalance);
     } catch (err) {
       console.error("Failed to fetch balance:", err);
     }
@@ -89,11 +156,16 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Wallet Address Display */}
+          {/* Wallet + Balance */}
           {account ? (
-            <p className="text-sm text-green-400 mt-4 font-mono">
-              Wallet: {account.slice(0, 6)}...{account.slice(-4)}
-            </p>
+            <div className="mt-4">
+              <p className="text-sm text-green-400 font-mono">
+                Wallet: {account.slice(0, 6)}...{account.slice(-4)}
+              </p>
+              <p className="text-sm text-cyber-300 font-mono mt-2">
+                Balance: {nectrBalance} NECTR
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-cyber-300 mt-4">
               Connect your wallet to enable staking
