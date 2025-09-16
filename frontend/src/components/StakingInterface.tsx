@@ -38,9 +38,10 @@ export default function StakingInterface() {
       const receipt = await stake(stakeAmount);
       setTxHash(receipt.hash);
       setStakeAmount("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Staking error:", error);
-      alert(error.message || "Staking failed");
+      const msg = error instanceof Error ? error.message : String(error);
+      alert(msg || "Staking failed");
     } finally {
       setIsStaking(false);
     }
@@ -56,9 +57,10 @@ export default function StakingInterface() {
       const receipt = await unstake(unstakeAmount);
       setTxHash(receipt.hash);
       setUnstakeAmount("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Unstaking error:", error);
-      alert(error.message || "Unstaking failed");
+      const msg = error instanceof Error ? error.message : String(error);
+      alert(msg || "Unstaking failed");
     } finally {
       setIsUnstaking(false);
     }

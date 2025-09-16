@@ -39,7 +39,7 @@ export default function FeatureCards() {
           </h3>
         </div>
         <p className="text-electric-300 mb-4">
-          Lightning-fast transactions powered by Polygon's high-performance
+          Lightning-fast transactions powered by Polygon&apos;s high-performance
           network.
         </p>
         <div className="text-electric-400 font-mono text-sm">Speed: 2.3s</div>

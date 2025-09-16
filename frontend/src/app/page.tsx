@@ -13,6 +13,7 @@ import StakeModal from "../components/StakeModal";
 import UnstakeModal from "../components/UnstakeModal";
 import StatsSection from "../components/StatsSection";
 import FeatureCards from "../components/FeatureCards";
+import NewsFeed from "@/components/NewsFeed";
 import CommunitySection from "../components/CommunitySection";
 
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
@@ -28,7 +29,6 @@ export default function Home() {
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [stakeAmount, setStakeAmount] = useState("");
   const [isApproving, setIsApproving] = useState(false);
-  const [allowance, setAllowance] = useState<bigint>(0n);
   const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
   const [unstakeAmount, setUnstakeAmount] = useState("");
   const [isUnstaking, setIsUnstaking] = useState(false);
@@ -93,8 +93,9 @@ export default function Home() {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: AMOY_CHAIN_ID_HEX }],
         });
-      } catch (e: any) {
-        if (e?.code === 4902) {
+      } catch (e: unknown) {
+        const err = e as { code?: number };
+        if (err?.code === 4902) {
           try {
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
@@ -178,29 +179,11 @@ export default function Home() {
     }
   };
 
-  const fetchAllowance = async (userAddress: string) => {
-    try {
-      if (!NECTR_STAKING_ADDRESS) return;
-      const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL);
-      const token = new ethers.Contract(
-        NECTR_TOKEN_ADDRESS,
-        NectrToken.abi,
-        provider
-      );
-      const current = (await token.allowance(
-        userAddress,
-        NECTR_STAKING_ADDRESS
-      )) as bigint;
-      setAllowance(current);
-    } catch (err) {
-      console.error("Failed to fetch allowance:", err);
-    }
-  };
+  // fetchAllowance removed; allowance is checked inline in stake()
 
   useEffect(() => {
     if (account) {
       fetchBalance(account);
-      fetchAllowance(account);
     }
   }, [account]);
 
@@ -265,9 +248,10 @@ export default function Home() {
 
       const newStaked = await stakingContract.stakes(account);
       setStakedAmount(ethers.formatUnits(newStaked, decimals));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Staking failed:", err);
-      toast.error(err?.message || "Staking failed");
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg || "Staking failed");
       setIsApproving(false);
     }
   };
@@ -303,9 +287,10 @@ export default function Home() {
         const newStaked = await stakingContract.stakes(account);
         setStakedAmount(ethers.formatUnits(newStaked, decimals));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Unstaking failed:", err);
-      toast.error(err?.message || "Unstaking failed");
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg || "Unstaking failed");
     }
   };
 
@@ -376,6 +361,7 @@ export default function Home() {
 
         <StatsSection />
         <FeatureCards />
+        <NewsFeed />
         <CommunitySection />
       </div>
     </div>

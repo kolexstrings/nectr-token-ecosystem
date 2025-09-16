@@ -51,8 +51,9 @@ export const useContract = (address: string | null) => {
       setTokenBalance(ethers.formatEther(balance));
       setStakedAmount(ethers.formatEther(staked));
       setAllowance(ethers.formatEther(tokenAllowance));
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch contract data");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Failed to fetch contract data");
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +61,7 @@ export const useContract = (address: string | null) => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
   const stake = async (amount: string) => {
@@ -98,8 +100,9 @@ export const useContract = (address: string | null) => {
       await fetchData();
 
       return receipt;
-    } catch (err: any) {
-      throw new Error(err.message || "Staking failed");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(msg || "Staking failed");
     }
   };
 
@@ -121,8 +124,9 @@ export const useContract = (address: string | null) => {
       await fetchData();
 
       return receipt;
-    } catch (err: any) {
-      throw new Error(err.message || "Unstaking failed");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(msg || "Unstaking failed");
     }
   };
 

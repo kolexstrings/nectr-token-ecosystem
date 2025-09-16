@@ -42,11 +42,12 @@ export const useWallet = () => {
           error: null,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       setWalletState((prev) => ({
         ...prev,
         isConnecting: false,
-        error: error.message || "Failed to connect wallet",
+        error: msg || "Failed to connect wallet",
       }));
     }
   };
