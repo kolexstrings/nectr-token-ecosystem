@@ -5,42 +5,40 @@ import { useState, useEffect } from "react";
 import { Copy, Wallet } from "lucide-react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { toast } from "react-toastify";
-import NectrToken from "../../NECTRToken.json";
+import StakingInterface from "@/components/StakingInterface";
+import Modal from "@/components/Modal";
+import NectrToken from "../../abis/NECTRToken.json";
+import NectrStaking from "../../abis/NectarStaking.json";
+
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
+const NECTR_STAKING_ADDRESS = process.env.NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS;
 const AMOY_RPC_URL = process.env.NEXT_PUBLIC_AMOY_RPC_URL!;
+const AMOY_CHAIN_ID_HEX = "0x13882"; // 80002
 
 export default function Home() {
   const [account, setAccount] = useState<string | null>(null);
   const [nectrBalance, setNectrBalance] = useState<string>("0");
+  const [stakedAmount, setStakedAmount] = useState("0");
+  const [isStaking, setIsStaking] = useState(false);
+  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [allowance, setAllowance] = useState<bigint>(0n);
 
   useEffect(() => {
     if (!account) return;
 
     const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL);
-    const contract = new ethers.Contract(
-      NECTR_TOKEN_ADDRESS,
-      NectrToken.abi,
-      provider
-    );
+    const onBlock = () => fetchBalance(account);
 
-    // Fetch balance initially
+    // Initial fetch
     fetchBalance(account);
 
-    // Event listener
-    const onTransfer = (from: string, to: string) => {
-      if (
-        from.toLowerCase() === account.toLowerCase() ||
-        to.toLowerCase() === account.toLowerCase()
-      ) {
-        fetchBalance(account);
-      }
-    };
+    // Poll on each new block (no expiring filters)
+    provider.on("block", onBlock);
 
-    contract.on("Transfer", onTransfer);
-
-    // Cleanup when component unmounts
     return () => {
-      contract.off("Transfer", onTransfer);
+      provider.off("block", onBlock);
     };
   }, [account]);
 
@@ -64,19 +62,61 @@ export default function Home() {
   }, []);
 
   const connectWallet = async () => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setAccount(accounts[0]);
-      } catch (err) {
-        console.error("Wallet connection failed:", err);
-        toast.error("Wallet connection failed. Please try again.");
-      }
-    } else {
+    if (typeof window === "undefined" || !window.ethereum) {
       toast.error(
         "MetaMask is not installed. Please install it to use this dApp."
       );
+      return;
+    }
+
+    try {
+      // Try to switch/add, but don't block connect if it fails
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: AMOY_CHAIN_ID_HEX }],
+        });
+      } catch (e: any) {
+        if (e?.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [
+                {
+                  chainId: AMOY_CHAIN_ID_HEX,
+                  chainName: "Polygon Amoy",
+                  nativeCurrency: {
+                    name: "MATIC",
+                    symbol: "MATIC",
+                    decimals: 18,
+                  },
+                  rpcUrls: [AMOY_RPC_URL].filter(Boolean),
+                  blockExplorerUrls: ["https://www.oklink.com/amoy"],
+                },
+              ],
+            });
+          } catch {
+            // ignore; we'll still try to connect
+          }
+        } else {
+          // ignore; we'll still try to connect
+        }
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      setAccount(accounts[0]);
+
+      // Optional: warn if still on wrong chain
+      const nw = await provider.getNetwork();
+      if (nw.chainId !== 80002n) {
+        toast.warn(
+          "Connected wallet, but not on Polygon Amoy. Some actions may fail."
+        );
+      }
+    } catch (err) {
+      console.error("Wallet connection failed:", err);
+      toast.error("Wallet connection failed. Please try again.");
     }
   };
 
@@ -99,7 +139,6 @@ export default function Home() {
       const decimals = await contract.decimals();
       const formatted = ethers.formatUnits(rawBalance, decimals);
 
-      // Convert to number and apply formatting rules
       let displayBalance: string;
       const num = parseFloat(formatted);
 
@@ -122,11 +161,99 @@ export default function Home() {
     }
   };
 
+  const fetchAllowance = async (userAddress: string) => {
+    try {
+      if (!NECTR_STAKING_ADDRESS) return;
+      const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL);
+      const token = new ethers.Contract(
+        NECTR_TOKEN_ADDRESS,
+        NectrToken.abi,
+        provider
+      );
+      const current = (await token.allowance(
+        userAddress,
+        NECTR_STAKING_ADDRESS
+      )) as bigint;
+      setAllowance(current);
+    } catch (err) {
+      console.error("Failed to fetch allowance:", err);
+    }
+  };
+
   useEffect(() => {
     if (account) {
       fetchBalance(account);
+      fetchAllowance(account);
     }
   }, [account]);
+
+  const stake = async (amount: string) => {
+    if (!account) return toast.error("Wallet not connected");
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      const codeToken = await signer.provider.getCode(NECTR_TOKEN_ADDRESS);
+      if (codeToken === "0x") {
+        throw new Error(
+          "Invalid NECTR token address for this network (no contract code)."
+        );
+      }
+      if (!NECTR_STAKING_ADDRESS)
+        throw new Error("Staking contract address is undefined");
+      const codeStaking = await signer.provider.getCode(NECTR_STAKING_ADDRESS);
+      if (codeStaking === "0x") {
+        throw new Error(
+          "Invalid staking contract address for this network (no contract code)."
+        );
+      }
+
+      const tokenContract = new ethers.Contract(
+        NECTR_TOKEN_ADDRESS,
+        NectrToken.abi,
+        signer
+      );
+      const decimals = await tokenContract.decimals(); // now safe
+      const formattedAmount = ethers.parseUnits(amount, decimals);
+
+      const stakingContract = new ethers.Contract(
+        NECTR_STAKING_ADDRESS,
+        NectrStaking.abi,
+        signer
+      );
+
+      const currentAllowance = (await tokenContract.allowance(
+        account,
+        NECTR_STAKING_ADDRESS
+      )) as bigint;
+      if (currentAllowance < formattedAmount) {
+        setIsApproving(true);
+        const approveTx = await tokenContract.approve(
+          NECTR_STAKING_ADDRESS,
+          formattedAmount
+        );
+        toast.info("Approval sent, waiting for confirmation...");
+        await approveTx.wait();
+        setIsApproving(false);
+      }
+
+      const tx = await stakingContract.stake(formattedAmount);
+      toast.info("Transaction sent, waiting for confirmation...");
+      await tx.wait();
+      toast.success("Successfully staked NECTR!");
+
+      fetchBalance(account);
+      fetchAllowance(account);
+
+      const newStaked = await stakingContract.stakes(account);
+      setStakedAmount(ethers.formatUnits(newStaked, decimals));
+    } catch (err: any) {
+      console.error("Staking failed:", err);
+      toast.error(err?.message || "Staking failed");
+      setIsApproving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-dark-900 cyber-grid text-white p-8">
@@ -160,6 +287,7 @@ export default function Home() {
 
             {/* Start Staking - Secondary (Purple) */}
             <button
+              onClick={() => setIsStakeModalOpen(true)}
               className={`px-6 py-2 rounded-lg ${
                 account
                   ? "btn-neon bg-purple-600 hover:bg-purple-700 text-white"
@@ -167,7 +295,7 @@ export default function Home() {
               }`}
               disabled={!account}
             >
-              Start Staking
+              Stake NECTR
             </button>
           </div>
 
@@ -286,6 +414,68 @@ export default function Home() {
               <div className="text-cyber-300">Uptime</div>
             </div>
           </div>
+          {isStakeModalOpen && (
+            <Modal
+              onClose={() => setIsStakeModalOpen(false)}
+              containerClassName="items-center"
+              contentClassName="max-w-2xl -mt-36"
+            >
+              <div className="space-y-4 text-white">
+                <h3 className="text-2xl font-cyber text-cyber-400 text-center">
+                  Stake NECTR
+                </h3>
+                <div className="glass rounded-glass p-4 bg-dark-800">
+                  <label className="block text-xs font-mono text-cyber-300 mb-1">
+                    Amount to Stake
+                  </label>
+                  <input
+                    type="number"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    placeholder="0.0"
+                    step="0.000001"
+                    className="w-full px-3 py-2 rounded-md bg-dark-900 text-white placeholder-cyber-600 border border-cyber-700 focus:outline-none focus:ring-2 focus:ring-cyber-500"
+                  />
+                  <p className="text-xs text-cyber-500 mt-2">
+                    Balance: {nectrBalance} NECTR
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsStakeModalOpen(false)}
+                    className="flex-1 px-4 py-2 rounded-lg bg-dark-700 text-cyber-300 hover:bg-dark-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!stakeAmount) return;
+                      setIsStaking(true);
+                      try {
+                        await stake(stakeAmount);
+                        setStakeAmount("");
+                        setIsStakeModalOpen(false);
+                      } finally {
+                        setIsStaking(false);
+                      }
+                    }}
+                    disabled={isStaking || isApproving || !stakeAmount}
+                    className={`flex-1 px-4 py-2 rounded-lg ${
+                      isStaking || isApproving || !stakeAmount
+                        ? "opacity-50 cursor-not-allowed bg-dark-700 text-cyber-300"
+                        : "btn-neon"
+                    }`}
+                  >
+                    {isApproving
+                      ? "Approving..."
+                      : isStaking
+                      ? "Staking..."
+                      : "Stake"}
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
         </div>
       </div>
     </div>
