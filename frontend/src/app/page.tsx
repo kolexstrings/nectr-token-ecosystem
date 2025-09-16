@@ -9,6 +9,8 @@ import StakingInterface from "@/components/StakingInterface";
 import Modal from "@/components/Modal";
 import NectrToken from "../../abis/NECTRToken.json";
 import NectrStaking from "../../abis/NectarStaking.json";
+import Image from "next/image";
+import { Icon } from "@iconify/react";
 
 const NECTR_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_NECTR_TOKEN_ADDRESS!;
 const NECTR_STAKING_ADDRESS = process.env.NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS;
@@ -623,32 +625,55 @@ export default function Home() {
               <p className="text-cyber-300 text-center">
                 Join our community and get the latest updates
               </p>
-              <div className="flex flex-wrap gap-4">
+
+              <div className="flex items-center gap-6 text-white">
+                <a
+                  href="https://twitter.com/yourhandle"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="X"
+                  className="text-white transition-transform hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+                >
+                  <Icon
+                    icon="simple-icons:x"
+                    width={36}
+                    height={36}
+                    color="#ffffff"
+                  />
+                </a>
                 <a
                   href="https://t.me/yourTelegram"
                   target="_blank"
                   rel="noreferrer"
-                  className="btn-neon px-6 py-2 rounded-lg"
+                  aria-label="Telegram"
+                  className="text-white transition-transform hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(0,170,255,0.7)]"
                 >
-                  Telegram
+                  <Icon
+                    icon="simple-icons:telegram"
+                    width={36}
+                    height={36}
+                    color="#ffffff"
+                  />
                 </a>
                 <a
                   href="https://discord.gg/yourInvite"
                   target="_blank"
                   rel="noreferrer"
-                  className="btn-electric px-6 py-2 rounded-lg"
+                  aria-label="Discord"
+                  className="text-white transition-transform hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(114,137,218,0.7)]"
                 >
-                  Discord
-                </a>
-                <a
-                  href="https://twitter.com/yourhandle"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-cyber px-6 py-2 rounded-lg"
-                >
-                  Follow on X
+                  <Icon
+                    icon="simple-icons:discord"
+                    width={36}
+                    height={36}
+                    color="#ffffff"
+                  />
                 </a>
               </div>
+
+              <p className="text-[10px] text-cyber-600 mt-2">
+                Icons by Flaticon — please replace with your licensed assets.
+              </p>
             </div>
           </div>
         </div>
