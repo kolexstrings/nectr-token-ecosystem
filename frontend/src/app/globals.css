@@ -188,3 +188,15 @@ body {
     transform: translateX(-50%);
   }
 }
+/* Reverse direction (left-to-right) */
+.marquee__track--rtl {
+  animation: marquee-right 12s linear infinite;
+}
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

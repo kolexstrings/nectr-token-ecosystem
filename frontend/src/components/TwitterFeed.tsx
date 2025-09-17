@@ -14,8 +14,12 @@ type Tweet = {
 
 export default function TwitterFeed({
   handle = "KoladeOlukoya",
+  limit = 5,
+  ttlMs = 300000,
 }: {
   handle?: string;
+  limit?: number;
+  ttlMs?: number;
 }) {
   const [tweets, setTweets] = useState<Tweet[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +31,11 @@ export default function TwitterFeed({
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/twitter?handle=${encodeURIComponent(handle)}&limit=5`,
+          `/api/twitter?handle=${encodeURIComponent(
+            handle
+          )}&limit=${encodeURIComponent(
+            String(limit)
+          )}&ttl=${encodeURIComponent(String(ttlMs))}`,
           {
             cache: "no-store",
           }
@@ -61,7 +69,7 @@ export default function TwitterFeed({
   return (
     <section className="my-0 overflow-hidden">
       <div className="marquee w-full">
-        <div className="marquee__track">
+        <div className="marquee__track marquee__track--rtl">
           {loop.map((t, i) => (
             <article
               key={`${t.id}-${i}`}

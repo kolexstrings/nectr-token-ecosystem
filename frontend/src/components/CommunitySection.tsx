@@ -11,7 +11,7 @@ export default function CommunitySection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Twitter/X Feed */}
-        <TwitterFeed handle="KoladeOlukoya" />
+        <TwitterFeed handle="CoinMarketCap" limit={10} ttlMs={600000} />
 
         {/* Social Links */}
         <div className="bg-dark-800 rounded-lg p-6 flex flex-col items-center justify-center gap-4">
@@ -20,7 +20,7 @@ export default function CommunitySection() {
           </p>
           <div className="flex items-center gap-6">
             <a
-              href="https://twitter.com/KoladeOlukoya"
+              href="https://twitter.com/"
               target="_blank"
               rel="noreferrer"
               aria-label="X"
