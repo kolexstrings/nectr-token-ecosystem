@@ -190,7 +190,7 @@ body {
 }
 /* Reverse direction (left-to-right) */
 .marquee__track--rtl {
-  animation: marquee-right 12s linear infinite;
+  animation: marquee-right 40s linear infinite;
 }
 @keyframes marquee-right {
   0% {

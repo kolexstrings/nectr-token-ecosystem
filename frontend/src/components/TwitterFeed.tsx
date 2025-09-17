@@ -53,7 +53,7 @@ export default function TwitterFeed({
     return () => {
       cancelled = true;
     };
-  }, [handle]);
+  }, [handle, limit, ttlMs]);
 
   if (loading)
     return <div className="bg-dark-800 rounded-lg p-4">Loading tweets…</div>;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const TWITTER_API = "https://api.twitter.com/2";
 
-type CacheEntry = { payload: any; ts: number };
+type CacheEntry = { payload: unknown; ts: number };
 const cache: Record<string, CacheEntry> = {};
 const lastCall: Record<string, number> = {};
 const DEFAULT_TTL_MS = 300_000; // 5 minutes
