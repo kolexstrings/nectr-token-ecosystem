@@ -1,57 +1,107 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+# NECTR Token Ecosystem
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+A full-stack Web3 project for the NECTR token: production-ready staking smart contracts (Hardhat) and a modern Next.js dApp with wallet connection, staking UI, real‑time balances, a horizontally scrolling news feed, and a live Twitter community feed.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Features
 
-## Project Overview
+- **NECTR staking dApp**: Stake/unstake NECTR, view wallet and staked balances
+- **Wallet integration**: MetaMask via ethers v6 (Polygon Amoy supported)
+- **Modern UI**: Tailwind, glass morphism, marquee news feed with local images
+- **Live updates**: Twitter/X embedded timeline
 
-This example project includes:
+## Tech Stack
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- Smart contracts: Solidity, Hardhat (Ignition for deployments)
+- Frontend: Next.js, TypeScript, Tailwind CSS
+- Blockchain interaction: ethers v6
 
-## Usage
+---
 
-### Running Tests
+## Quick Start
 
-To run all the tests in the project, execute the following command:
+### 1) Prerequisites
 
-```shell
-npx hardhat test
+- Node.js 18+
+- Yarn or npm
+- MetaMask (browser)
+
+### 2) Install dependencies
+
+```bash
+# Root deps (Hardhat)
+yarn
+
+# Frontend deps
+cd frontend
+yarn
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+### 3) Configure environment
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
+Create a `.env` file in `frontend/` using `env.example` as reference:
+
+```bash
+cd frontend
+cp ../env.example .env
 ```
 
-### Make a deployment to Sepolia
+Required variables for the dApp:
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+- `NEXT_PUBLIC_AMOY_RPC_URL` – Polygon Amoy RPC URL
+- `NEXT_PUBLIC_NECTR_TOKEN_ADDRESS` – NECTR ERC‑20 address on Amoy
+- `NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS` – Staking contract address on Amoy
 
-To run the deployment to a local chain:
+### 4) Run the dApp
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+```bash
+cd frontend
+yarn dev
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+Open `http://localhost:3000`. Connect MetaMask, switch to Polygon Amoy if prompted, and interact with staking.
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+---
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+## Smart Contracts (Hardhat)
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+Common scripts:
+
+```bash
+# Compile
+yarn hardhat compile
+
+# Run tests
+yarn hardhat test
+
+# Local node
+yarn hardhat node
+
+# Deploy with Ignition (example network)
+yarn hardhat ignition deploy ignition/modules/NectrStaking.ts --network <network>
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+Set your private key for deployments using env vars or Hardhat keystore, and configure networks in `hardhat.config.ts`.
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+Deployment artifacts and addresses for Amoy are stored under `ignition/deployments/` and referenced by the frontend via env vars.
+
+---
+
+## Frontend Notes
+
+- Local news images live in `frontend/public/images/` and are mapped per item.
+- External images are allowed via `next.config.ts` if needed.
+- The Twitter feed uses `twttr.widgets.createTimeline`; ensure `platform.twitter.com` isn’t blocked by extensions or CSP.
+
+---
+
+## Troubleshooting
+
+- Wallet not connecting: ensure MetaMask is installed and the Amoy network is reachable.
+- Images not rendering: confirm local files under `public/images/` and paths in `NewsFeed.tsx`.
+- Twitter not rendering: check browser console/network for blocked `platform.twitter.com` requests.
+
+---
+
+## License
+
+MIT
