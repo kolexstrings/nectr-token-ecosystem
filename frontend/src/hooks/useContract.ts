@@ -25,7 +25,7 @@ export const useContract = (address: string | null) => {
     setError(null);
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum!);
 
       // Get token contract
       const tokenContract = new ethers.Contract(

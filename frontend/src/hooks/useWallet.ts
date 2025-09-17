@@ -30,9 +30,9 @@ export const useWallet = () => {
     setWalletState((prev) => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const accounts = await window.ethereum.request({
+      const accounts = (await window.ethereum.request({
         method: "eth_requestAccounts",
-      });
+      })) as string[];
 
       if (accounts.length > 0) {
         setWalletState({
@@ -62,14 +62,17 @@ export const useWallet = () => {
   };
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.ethereum) return;
+    const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+    if (!eth) return;
 
     // Check if already connected
     const checkConnection = async () => {
       try {
-        const accounts = await window.ethereum.request({
+        if (!eth) return;
+        const accounts = (await eth.request({
           method: "eth_accounts",
-        });
+        })) as string[]; // cast return type
+
         if (accounts.length > 0) {
           setWalletState({
             address: accounts[0],
@@ -86,8 +89,9 @@ export const useWallet = () => {
     checkConnection();
 
     // Listen for account changes
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
+    const handleAccountsChanged = (...args: unknown[]) => {
+      const accounts = (args[0] ?? []) as string[];
+      if (!Array.isArray(accounts) || accounts.length === 0) {
         disconnectWallet();
       } else {
         setWalletState((prev) => ({
@@ -98,14 +102,13 @@ export const useWallet = () => {
       }
     };
 
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    if (typeof eth.on === "function") {
+      eth.on("accountsChanged", handleAccountsChanged);
+    }
 
     return () => {
-      if (window.ethereum.removeListener) {
-        window.ethereum.removeListener(
-          "accountsChanged",
-          handleAccountsChanged
-        );
+      if (typeof eth?.removeListener === "function") {
+        eth.removeListener("accountsChanged", handleAccountsChanged);
       }
     };
   }, []);

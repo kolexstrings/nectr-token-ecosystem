@@ -1,60 +1,22 @@
 "use client";
 import { Icon } from "@iconify/react";
-import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+
+const TwitterTimeline = dynamic(
+  () => import("react-twitter-embed").then((m) => m.TwitterTimelineEmbed),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        aria-busy="true"
+        className="bg-dark-900/40 rounded-lg w-full"
+        style={{ height: 520 }}
+      />
+    ),
+  }
+);
 
 export default function CommunitySection() {
-  const twContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const mountTimeline = () => {
-      const tw = (window as any)?.twttr;
-      const target = twContainerRef.current;
-      if (!target) return;
-      const tryCreate = () => {
-        if (!tw || !tw.widgets) return;
-        target.innerHTML = "";
-        tw.widgets
-          .createTimeline(
-            { sourceType: "profile", screenName: "KoladeOlukoya" },
-            target,
-            {
-              theme: "dark",
-              chrome: "noheader nofooter noborders transparent",
-              height: 520,
-              width: "100%",
-            }
-          )
-          .catch(() => {});
-      };
-      if (tw?.ready) {
-        tw.ready(() => tryCreate());
-      } else {
-        tryCreate();
-      }
-    };
-
-    if ((window as any)?.twttr) {
-      mountTimeline();
-    } else {
-      // Fallback loader if the script hasn't been attached yet
-      const id = "twitter-wjs";
-      if (!document.getElementById(id)) {
-        const s = document.createElement("script");
-        s.id = id;
-        s.src = "https://platform.twitter.com/widgets.js";
-        s.async = true;
-        s.onload = () => {
-          const tw = (window as any)?.twttr;
-          if (tw?.ready) tw.ready(() => mountTimeline());
-          else mountTimeline();
-        };
-        document.body.appendChild(s);
-      }
-    }
-    const id = "twitter-wjs";
-    // No cleanup needed; widget tears down with DOM
-  }, []);
-
   return (
     <div className="glass rounded-glass p-6 mb-12">
       <h2 className="text-3xl font-cyber text-center mb-6">
@@ -63,7 +25,17 @@ export default function CommunitySection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Twitter/X Feed */}
-        <div className="bg-dark-800 rounded-lg p-4" ref={twContainerRef} />
+        <div className="bg-dark-800 rounded-lg p-4">
+          <TwitterTimeline
+            sourceType="url"
+            url="https://twitter.com/KoladeOlukoya/status/1938650520685564231"
+            theme="dark"
+            noHeader
+            noFooter
+            noBorders
+            options={{ height: 520, width: "100%" }}
+          />
+        </div>
 
         {/* Social Links */}
         <div className="bg-dark-800 rounded-lg p-6 flex flex-col items-center justify-center gap-4">

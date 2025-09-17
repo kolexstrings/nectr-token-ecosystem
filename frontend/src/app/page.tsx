@@ -65,9 +65,13 @@ export default function Home() {
       }
     };
 
-    eth.on("accountsChanged", handler);
+    if (typeof eth.on === "function") {
+      eth.on("accountsChanged", handler);
+    }
     return () => {
-      eth.removeListener("accountsChanged", handler);
+      if (typeof eth.removeListener === "function") {
+        eth.removeListener("accountsChanged", handler);
+      }
     };
   }, []);
 
@@ -123,7 +127,7 @@ export default function Home() {
         }
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum!);
       const accounts = await provider.send("eth_requestAccounts", []);
       setAccount(accounts[0]);
 
@@ -193,7 +197,7 @@ export default function Home() {
     if (!account) return toast.error("Wallet not connected");
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await provider.getSigner();
 
       const codeToken = await signer.provider.getCode(NECTR_TOKEN_ADDRESS);
@@ -246,7 +250,6 @@ export default function Home() {
       toast.success("Successfully staked NECTR!");
 
       fetchBalance(account);
-      fetchAllowance(account);
 
       const newStaked = await stakingContract.stakes(account);
       setStakedAmount(ethers.formatUnits(newStaked, decimals));
@@ -261,7 +264,7 @@ export default function Home() {
   const unstake = async (amount: string) => {
     if (!account) return toast.error("Wallet not connected");
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await provider.getSigner();
 
       if (!NECTR_STAKING_ADDRESS)
