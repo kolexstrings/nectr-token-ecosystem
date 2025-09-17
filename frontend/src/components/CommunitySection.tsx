@@ -1,20 +1,6 @@
 "use client";
 import { Icon } from "@iconify/react";
-import dynamic from "next/dynamic";
-
-const TwitterTimeline = dynamic(
-  () => import("react-twitter-embed").then((m) => m.TwitterTimelineEmbed),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        aria-busy="true"
-        className="bg-dark-900/40 rounded-lg w-full"
-        style={{ height: 520 }}
-      />
-    ),
-  }
-);
+import TwitterFeed from "./TwitterFeed";
 
 export default function CommunitySection() {
   return (
@@ -25,17 +11,7 @@ export default function CommunitySection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Twitter/X Feed */}
-        <div className="bg-dark-800 rounded-lg p-4">
-          <TwitterTimeline
-            sourceType="url"
-            url="https://twitter.com/KoladeOlukoya/status/1938650520685564231"
-            theme="dark"
-            noHeader
-            noFooter
-            noBorders
-            options={{ height: 520, width: "100%" }}
-          />
-        </div>
+        <TwitterFeed handle="KoladeOlukoya" />
 
         {/* Social Links */}
         <div className="bg-dark-800 rounded-lg p-6 flex flex-col items-center justify-center gap-4">
