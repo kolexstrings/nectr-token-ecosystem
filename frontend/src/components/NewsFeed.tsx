@@ -16,7 +16,7 @@ export default function NewsFeed() {
   const loop = [...items, ...items];
 
   return (
-    <section className="my-16 overflow-hidden bg-dark-800 py-6">
+    <section className="my-16 overflow-hidden py-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Latest News</h2>
       <div className="marquee w-full">
         <div className="marquee__track">
