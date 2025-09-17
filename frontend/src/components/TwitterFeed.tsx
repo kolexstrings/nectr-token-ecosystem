@@ -69,7 +69,10 @@ export default function TwitterFeed({
   return (
     <section className="my-0 overflow-hidden">
       <div className="marquee w-full">
-        <div className="marquee__track marquee__track--rtl">
+        <div
+          className="marquee__track marquee__track--rtl"
+          style={{ animationDuration: "35s" }}
+        >
           {loop.map((t, i) => (
             <article
               key={`${t.id}-${i}`}
