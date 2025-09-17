@@ -4,27 +4,27 @@
     "url": "https://example.com/blockchain-news",
     "date": "2025-09-12",
     "category": "Blockchain",
-    "image": "https://images.unsplash.com/photo-1638913651908-05f728621f81"
+    "image": "https://unsplash.com/photos/a-group-of-blue-cubes-with-numbers-on-them-JlijbOtSWuw"
   },
   {
     "title": "NECTR Token Staking Reaches $10M",
     "url": "https://example.com/nectr-staking",
     "date": "2025-09-10",
     "category": "Ecosystem",
-    "image": "https://images.unsplash.com/photo-1641154742462-89d37f88e2be"
+    "image": "https://source.unsplash.com/800x400/?crypto,staking,finance"
   },
   {
     "title": "Global Push for Pollinator Conservation",
     "url": "https://example.com/pollinator-conservation",
     "date": "2025-09-08",
     "category": "Bee News",
-    "image": "https://images.unsplash.com/photo-1568640347023-8a95a83fc6a3"
+    "image": "https://source.unsplash.com/800x400/?bee,pollinator,nature"
   },
   {
     "title": "Polygon Expands Amoy Testnet Features",
     "url": "https://example.com/polygon-amoy",
     "date": "2025-09-06",
     "category": "Blockchain",
-    "image": "https://images.unsplash.com/photo-1627637563931-7af68f8a1c9b"
+    "image": "https://source.unsplash.com/800x400/?polygon,blockchain,network"
   }
 ]

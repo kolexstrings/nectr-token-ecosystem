@@ -12,8 +12,17 @@ type NewsItem = {
 
 export default function NewsFeed() {
   const items = newsData as NewsItem[];
-  // Duplicate once to create a seamless loop
   const loop = [...items, ...items];
+
+  const getLocalImage = (item: NewsItem) => {
+    const t = `${item.title} ${item.category}`.toLowerCase();
+    if (t.includes("polygon")) return "/images/polygon.jpg";
+    if (t.includes("nectr") || t.includes("stake")) return "/images/nectr.jpg";
+    if (t.includes("bee") || t.includes("pollinator") || t.includes("global"))
+      return "/images/global.jpg";
+    if (t.includes("blockchain")) return "/images/blockchain.jpg";
+    return "/images/blockchain.jpg";
+  };
 
   return (
     <section className="my-16 overflow-hidden py-6">
@@ -29,7 +38,7 @@ export default function NewsFeed() {
               className="flex-shrink-0 w-64 mx-4 bg-dark-900 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
             >
               <Image
-                src={item.image}
+                src={getLocalImage(item)}
                 alt={item.title}
                 width={256}
                 height={128}
