@@ -35,14 +35,15 @@ export default function NewsFeed() {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 w-64 mx-4 bg-dark-900 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+              className="flex-shrink-0 w-56 sm:w-64 mx-3 sm:mx-4 bg-dark-900 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
             >
               <Image
                 src={getLocalImage(item)}
                 alt={item.title}
                 width={256}
                 height={128}
-                className="w-full h-32 object-cover"
+                sizes="(max-width: 640px) 224px, 256px"
+                className="w-full h-28 sm:h-32 object-cover"
               />
               <div className="p-3">
                 <span className="text-xs text-yellow-400">{item.category}</span>

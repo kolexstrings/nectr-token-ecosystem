@@ -76,12 +76,12 @@ export default function TwitterFeed({
           {loop.map((t, i) => (
             <article
               key={`${t.id}-${i}`}
-              className="flex-shrink-0 w-72 mx-4 bg-dark-800 rounded-xl overflow-hidden border border-dark-700 shadow-lg hover:shadow-xl transition-shadow p-4"
+              className="flex-shrink-0 w-64 sm:w-72 mx-3 sm:mx-4 bg-dark-800 rounded-xl overflow-hidden border border-dark-700 shadow-lg hover:shadow-xl transition-shadow p-3 sm:p-4"
             >
-              <p className="text-sm whitespace-pre-wrap leading-snug line-clamp-6">
+              <p className="text-[13px] sm:text-sm whitespace-pre-wrap leading-snug line-clamp-6">
                 {t.text}
               </p>
-              <div className="text-[11px] text-gray-400 mt-3 flex items-center gap-4">
+              <div className="text-[10px] sm:text-[11px] text-gray-400 mt-3 flex items-center gap-3 sm:gap-4">
                 <span>
                   {t.created_at
                     ? new Date(t.created_at).toLocaleDateString()
