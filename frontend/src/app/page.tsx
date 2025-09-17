@@ -51,9 +51,11 @@ export default function Home() {
   }, [account]);
 
   useEffect(() => {
-    if (!window.ethereum) return;
+    const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+    if (!eth) return;
 
-    const handler = (accounts: string[]) => {
+    const handler = (...args: unknown[]) => {
+      const accounts = (args[0] ?? []) as string[];
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         fetchBalance(accounts[0]);
@@ -63,9 +65,9 @@ export default function Home() {
       }
     };
 
-    window.ethereum.on("accountsChanged", handler);
+    eth.on("accountsChanged", handler);
     return () => {
-      window.ethereum.removeListener("accountsChanged", handler);
+      eth.removeListener("accountsChanged", handler);
     };
   }, []);
 
